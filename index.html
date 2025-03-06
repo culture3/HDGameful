@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HDGameful Sub/Giveaway Wheel</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fugaz+One&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="header-container">
+    <a href="https://kick.com/HDGameful" target="_blank">
+      <img src="HDG.png" alt="HDG Logo" class="logo" />
+    </a>
+    <h1 class="title">Sub/Giveaway Wheel</h1>
+    <h2 class="subtitle">
+      <img src="lightning.gif" alt="Lightning" class="gif-left" />
+      USE CODE HDG
+      <img src="lightning.gif" alt="Lightning" class="gif-right" />
+    </h2>
+  </div>
+  
+  <div class="case-container">
+    <div class="spin-container">
+      <div class="item">
+        <div class="item-wrapper">
+          <img src="TM.png" alt="Watermark" class="watermark">
+          <img src="item.png" alt="Item 1" class="item-image">
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-wrapper">
+          <img src="TM.png" alt="Watermark" class="watermark">
+          <img src="item2.png" alt="Item 2" class="item-image">
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-wrapper">
+          <img src="TM.png" alt="Watermark" class="watermark">
+          <img src="item3.png" alt="Item 3" class="item-image">
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-wrapper">
+          <img src="TM.png" alt="Watermark" class="watermark">
+          <img src="item4.png" alt="Item 4" class="item-image">
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-wrapper">
+          <img src="TM.png" alt="Watermark" class="watermark">
+          <img src="item5.png" alt="Item 5" class="item-image">
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-wrapper">
+          <img src="TM.png" alt="Watermark" class="watermark">
+          <img src="item6.png" alt="Item 6" class="item-image">
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="open-button">
+    <button>Spin</button>
+  </div>
+  
+  <div class="winning-item-name" style="text-align:center; color:#fff; font-size:1.2em; margin-top:20px;"></div>
+  
+  <div class="item-list-items">
+  <div class="item-list-item" data-item="5 Coins RustMagic">
+    <div class="item-image">
+      <img src="item.png" alt="5 Coins RustMagic">
+      <span class="percentage"></span>
+    </div>
+    <span class="item-name">5 Coins RustMagic</span>
+  </div>
+  <div class="item-list-item" data-item="$5 Upgrader">
+    <div class="item-image">
+      <img src="item2.png" alt="$5 Upgrader">
+      <span class="percentage"></span>
+    </div>
+    <span class="item-name">$5 Upgrader</span>
+  </div>
+  <div class="item-list-item" data-item="10 Coins RustMagic">
+    <div class="item-image">
+      <img src="item3.png" alt="10 Coins RustMagic">
+      <span class="percentage"></span>
+    </div>
+    <span class="item-name">10 Coins RustMagic</span>
+  </div>
+  <div class="item-list-item" data-item="$10 Upgrader">
+    <div class="item-image">
+      <img src="item4.png" alt="$10 Upgrader">
+      <span class="percentage"></span>
+    </div>
+    <span class="item-name">$10 Upgrader</span>
+  </div>
+  <div class="item-list-item" data-item="15 Coins RustMagic">
+    <div class="item-image">
+      <img src="item5.png" alt="15 Coins RustMagic">
+      <span class="percentage"></span>
+    </div>
+    <span class="item-name">15 Coins RustMagic</span>
+  </div>
+  <div class="item-list-item" data-item="RustMagic Free Battle">
+    <div class="item-image">
+      <img src="item6.png" alt="RustMagic Free Battle">
+      <span class="percentage"></span>
+    </div>
+    <span class="item-name">RustMagic Free Battle</span>
+  </div>
+  <div class="item-list-item" data-item="$15 Upgrader">
+    <div class="item-image">
+      <img src="item7.png" alt="$15 Upgrader">
+      <span class="percentage"></span>
+    </div>
+    <span class="item-name">$15 Upgrader</span>
+  </div>
+  <div class="item-list-item" data-item="Upgrader Free Battle">
+    <div class="item-image">
+      <img src="item8.png" alt="Upgrader Free Battle">
+      <span class="percentage"></span>
+    </div>
+    <span class="item-name">Upgrader Free Battle</span>
+  </div>
+  <div class="item-list-item" data-item="Re-roll, All Wins 2x">
+    <div class="item-image">
+      <img src="item9.png" alt="Re-roll, All Wins 2x">
+      <span class="percentage"></span>
+    </div>
+    <span class="item-name">Re-roll, All Wins 2x</span>
+  </div>
+</div>
+  </div>
+  
+  <audio id="tickSound" src="tick.mp3" preload="auto"></audio>
+  
+  <script src="script.js"></script>
+</body>
+</html>
