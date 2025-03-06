@@ -50,15 +50,15 @@ $(document).ready(function () {
   updateItemListPercentages();
 
   function getRandomItem(itemPool = items, probs = cumulativeProbs) {
-  const totalProb = probs[probs.length - 1]; // Get the total probability of the pool
-  const rand = Math.random() * totalProb; // Scale random number to total probability
-  for (let i = 0; i < probs.length; i++) {
-    if (rand <= probs[i]) {
-      return itemPool[i];
+    const totalProb = probs[probs.length - 1];
+    const rand = Math.random() * totalProb;
+    for (let i = 0; i < probs.length; i++) {
+      if (rand <= probs[i]) {
+        return itemPool[i];
+      }
     }
+    return itemPool[itemPool.length - 1];
   }
-  return itemPool[itemPool.length - 1]; // Fallback (should rarely hit now)
-}
 
   const spinContainer = $(".spin-container");
   const totalReelItems = 100;
@@ -93,6 +93,7 @@ $(document).ready(function () {
   }
 
   const tickSound = document.getElementById("tickSound");
+  const winSound = document.getElementById("winSound"); // Reference to win sound
   populateReel();
 
   $(".open-button button").on("click", function () {
@@ -168,6 +169,8 @@ $(document).ready(function () {
                   setTimeout(() => spinWheel(button), 2000);
                 } else {
                   $(".winning-item-name").html(`Congratulations, you won: ${winningItem.name}!`);
+                  triggerConfetti(winningElement); // Trigger confetti on final result
+                  playWinSound(); // Play win sound on final result
                   button.prop("disabled", false).text("Spin Again");
                   if (isSpecialSpin) isSpecialSpin = false;
                 }
@@ -205,5 +208,64 @@ $(document).ready(function () {
       return closestItemIndex;
     }
     return lastCenteredItemIndex;
+  }
+
+  function triggerConfetti(winningElement) {
+    const itemPosition = winningElement.offset();
+    const itemWidth = winningElement.width();
+    const itemHeight = winningElement.height();
+    const originX = (itemPosition.left + itemWidth / 2) / window.innerWidth; // Normalize to 0-1
+    const originY = (itemPosition.top + itemHeight) / window.innerHeight; // Bottom of item
+    const interval = 500; // 0.5s (500ms) between bursts
+
+    // First burst
+    confetti({
+      particleCount: 200,
+      spread: 70,
+      origin: { x: originX, y: originY },
+      colors: ['#fe1d69', '#ff0000', '#00ff00', '#0000ff', '#ffff00'],
+      shapes: ['square', 'circle'],
+      gravity: 0.8,
+      scalar: 1.2,
+      startVelocity: 30,
+      disableForReducedMotion: true,
+    });
+
+    // Second burst after 500ms
+    setTimeout(() => {
+      confetti({
+        particleCount: 150,
+        spread: 60,
+        origin: { x: originX, y: originY },
+        colors: ['#fe1d69', '#ff0000', '#00ff00', '#0000ff', '#ffff00'],
+        shapes: ['square', 'circle'],
+        gravity: 0.8,
+        scalar: 1.2,
+        startVelocity: 25,
+      });
+    }, interval);
+
+    // Third burst after 1000ms
+    setTimeout(() => {
+      confetti({
+        particleCount: 100,
+        spread: 50,
+        origin: { x: originX, y: originY },
+        colors: ['#fe1d69', '#ff0000', '#00ff00', '#0000ff', '#ffff00'],
+        shapes: ['square', 'circle'],
+        gravity: 0.8,
+        scalar: 1.2,
+        startVelocity: 20,
+      });
+    }, interval * 2);
+  }
+
+  function playWinSound() {
+    if (winSound) {
+      winSound.currentTime = 0; // Reset to start
+      winSound.play().catch((error) => console.log("Error playing win sound:", error));
+    } else {
+      console.log("Win sound element not found!");
+    }
   }
 });
