@@ -242,3 +242,15 @@ body {
 .float-image {
   animation: float-image 1.5s infinite ease-in-out;
 }
+
+.watermark-footer {
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+  color: #ffffff;
+  font-size: 0.9em;
+  font-family: 'Fugaz One', sans-serif;
+  opacity: 0.7;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+}
