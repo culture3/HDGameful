@@ -11,6 +11,22 @@ $(document).ready(function () {
     { name: "REROLL ALL WINS X2", probability: 0.5, image: "item9.gif" },
   ];
 
+  function getShortName(fullName) {
+    if (fullName.includes("Coins")) {
+      return fullName.split(" ")[0] + " Coins";
+    }
+    if (fullName.startsWith("$")) {
+      return fullName.split(" ")[0];
+    }
+    if (fullName.includes("Free Battle")) {
+      return "Free Battle";
+    }
+    if (fullName.includes("REROLL")) {
+      return "Reroll x2";
+    }
+    return fullName;
+  }
+
   const sortedItems = [...items].sort((a, b) => a.probability - b.probability);
   let cumulativeProb = 0;
   const top10PercentItems = sortedItems.filter((item) => {
@@ -73,12 +89,14 @@ $(document).ready(function () {
       const randomItem = getRandomItem(itemPool, cumulativeProbsForPool(itemPool));
       const isTop10 = !isSpecialSpin && top10PercentItems.some(item => item.name === randomItem.name);
       const displayImage = isTop10 ? "gold.gif" : randomItem.image;
-      const displayName = isTop10 ? "Special Item" : randomItem.name;
+      const shortName = getShortName(randomItem.name);
+      const displayName = isTop10 ? "HD Spin" : shortName;
       const itemDiv = $(
         `<div class="item">
           <div class="item-wrapper">
             <img src="TM.png" alt="Watermark" class="watermark">
             <img src="${displayImage}" alt="${displayName}" class="item-image">
+            <span class="winning-item-text">${displayName}</span>
           </div>
         </div>`
       );
@@ -93,7 +111,7 @@ $(document).ready(function () {
   }
 
   const tickSound = document.getElementById("tickSound");
-  const winSound = document.getElementById("winSound"); // Reference to win sound
+  const winSound = document.getElementById("winSound");
   populateReel();
 
   $(".open-button button").on("click", function () {
@@ -120,11 +138,13 @@ $(document).ready(function () {
 
     reelItems[stopIndex] = winningItem;
     const displayImage = isTop10Percent && !isSpecialSpin ? "gold.gif" : winningItem.image;
-    const displayName = isTop10Percent && !isSpecialSpin ? "Special Item" : winningItem.name;
+    const shortName = getShortName(winningItem.name);
+    const displayNameDuringSpin = isTop10Percent && !isSpecialSpin ? "HD Spin" : shortName;
     $(spinContainer.children()[stopIndex]).html(
       `<div class="item-wrapper">
         <img src="TM.png" alt="Watermark" class="watermark">
-        <img src="${displayImage}" alt="${displayName}" class="item-image">
+        <img src="${displayImage}" alt="${displayNameDuringSpin}" class="item-image">
+        <span class="winning-item-text">${displayNameDuringSpin}</span>
       </div>`
     );
 
@@ -140,7 +160,7 @@ $(document).ready(function () {
     spinContainer.animate(
       { left: stopPosition },
       {
-        duration: 8000,
+        duration: 7500,
         easing: "easeOutExpo",
         step: function (now) {
           $(this).css("left", now + "px");
@@ -150,7 +170,7 @@ $(document).ready(function () {
           spinContainer.animate(
             { left: centerPosition },
             {
-              duration: 750,
+              duration: 700,
               easing: "easeInOutQuad",
               step: function (now) {
                 $(this).css("left", now + "px");
@@ -162,15 +182,21 @@ $(document).ready(function () {
                 winningElement.find(".item-image").addClass("float-image");
                 $(".item").not(winningElement).css("opacity", 0.5);
 
+                const fullDisplayName = isTop10Percent && !isSpecialSpin ? "HD Spin" : winningItem.name;
+                winningElement.find(".item-wrapper").html(
+                  `<img src="TM.png" alt="Watermark" class="watermark">
+                   <img src="${displayImage}" alt="${fullDisplayName}" class="item-image float-image">
+                   <span class="winning-item-text">${fullDisplayName}</span>`
+                );
+
                 if (isTop10Percent && !isSpecialSpin) {
-                  $(".winning-item-name").html("You hit a rare item! Re-spinning...");
+                  console.log("You hit a rare item! Re-spinning...");
                   isSpecialSpin = true;
                   specialItemPool = top10PercentItems;
-                  setTimeout(() => spinWheel(button), 2000);
+                  setTimeout(() => spinWheel(button), 1500);
                 } else {
-                  $(".winning-item-name").html(`Congratulations, you won: ${winningItem.name}!`);
-                  triggerConfetti(winningElement); // Trigger confetti on final result
-                  playWinSound(); // Play win sound on final result
+                  triggerConfetti(winningElement);
+                  playWinSound();
                   button.prop("disabled", false).text("Spin Again");
                   if (isSpecialSpin) isSpecialSpin = false;
                 }
@@ -210,59 +236,29 @@ $(document).ready(function () {
     return lastCenteredItemIndex;
   }
 
-  function triggerConfetti(winningElement) {
-    const itemPosition = winningElement.offset();
-    const itemWidth = winningElement.width();
-    const itemHeight = winningElement.height();
-    const originX = (itemPosition.left + itemWidth / 2) / window.innerWidth; // Normalize to 0-1
-    const originY = (itemPosition.top + itemHeight) / window.innerHeight; // Bottom of item
-    const interval = 500; // 0.5s (500ms) between bursts
+function triggerConfetti(winningElement) {
+  const itemPosition = winningElement.offset();
+  const itemWidth = winningElement.width();
+  const itemHeight = winningElement.height();
+  const originX = (itemPosition.left + itemWidth / 2) / window.innerWidth;
+  const originY = Math.max(0, (itemPosition.top - -75)) / window.innerHeight;
 
-    // First burst
-    confetti({
-      particleCount: 200,
-      spread: 70,
-      origin: { x: originX, y: originY },
-      colors: ['#fe1d69', '#ff0000', '#00ff00', '#0000ff', '#ffff00'],
-      shapes: ['square', 'circle'],
-      gravity: 0.8,
-      scalar: 1.2,
-      startVelocity: 30,
-      disableForReducedMotion: true,
-    });
-
-    // Second burst after 500ms
-    setTimeout(() => {
-      confetti({
-        particleCount: 150,
-        spread: 60,
-        origin: { x: originX, y: originY },
-        colors: ['#fe1d69', '#ff0000', '#00ff00', '#0000ff', '#ffff00'],
-        shapes: ['square', 'circle'],
-        gravity: 0.8,
-        scalar: 1.2,
-        startVelocity: 25,
-      });
-    }, interval);
-
-    // Third burst after 1000ms
-    setTimeout(() => {
-      confetti({
-        particleCount: 100,
-        spread: 50,
-        origin: { x: originX, y: originY },
-        colors: ['#fe1d69', '#ff0000', '#00ff00', '#0000ff', '#ffff00'],
-        shapes: ['square', 'circle'],
-        gravity: 0.8,
-        scalar: 1.2,
-        startVelocity: 20,
-      });
-    }, interval * 2);
-  }
+  confetti({
+    particleCount: 100,
+    spread: 300,
+    origin: { x: originX, y: originY },
+    colors: ['#fe1d69', '#ff0000', '#00ff00', '#0000ff', '#ffff00'],
+    shapes: ['square', 'circle'],
+    gravity: 0.2,
+    scalar: 1.2,
+    startVelocity: 40,
+    disableForReducedMotion: true,
+  });
+}
 
   function playWinSound() {
     if (winSound) {
-      winSound.currentTime = 0; // Reset to start
+      winSound.currentTime = 0;
       winSound.play().catch((error) => console.log("Error playing win sound:", error));
     } else {
       console.log("Win sound element not found!");
