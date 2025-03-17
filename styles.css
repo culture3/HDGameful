@@ -158,6 +158,7 @@ body {
   color: #ffffff;
   font-size: 0.9em;
   margin-top: 5px;
+  font-family: 'Fugaz One', sans-serif;
 }
 
 .open-button {
@@ -176,6 +177,7 @@ body {
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  font-family: 'Fugaz One', sans-serif;
 }
 
 .open-button button:hover {
@@ -194,6 +196,7 @@ body {
   justify-content: center;
   gap: 10px;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  font-family: 'Fugaz One', sans-serif;
 }
 
 .gif-left, .gif-right {
