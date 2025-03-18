@@ -57,57 +57,62 @@ $(document).ready(function () {
   }
 
   // Function to fetch leaderboard data
-  function fetchLeaderboard() {
-    console.log('Update 1: Starting leaderboard fetch');
-    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-    const targetUrl = 'https://www.hdgameful.com/leaderboard';
+function fetchLeaderboard() {
+  console.log('Update 1: Starting leaderboard fetch');
+  const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+  const targetUrl = 'https://www.hdgameful.com/leaderboard';
 
-    // Note for you: Before opening the site, visit https://cors-anywhere.herokuapp.com/
-    // and click "Request temporary access" to enable the proxy for your session.
-    $.ajax({
-      url: proxyUrl + targetUrl,
-      method: 'GET',
-      success: function (data) {
-        console.log('Update 2: Leaderboard data fetched successfully');
-        const $html = $(data);
+  // Note for you: Before opening the site, visit https://cors-anywhere.herokuapp.com/
+  // and click "Request temporary access" to enable the proxy for your session.
+  $.ajax({
+    url: proxyUrl + targetUrl,
+    method: 'GET',
+    success: function (data) {
+      console.log('Update 2: Leaderboard data fetched successfully');
+      const $html = $(data);
 
-        // Extract top 3 from first container
-        const top3 = $html.find('.container.mt-5 .col-sm-12 h4.text-light')
-          .map(function () {
-            return $(this).text().trim().replace(/[\n\s]+/g, ' ');
-          }).get();
+      // Extract top 3 from first container, ensuring all three are captured
+      const top3Elements = $html.find('.container.mt-5 h4.text-light');
+      const top3 = top3Elements
+        .map(function () {
+          return $(this).text().trim().replace(/[\n\s]+/g, ' ');
+        })
+        .get()
+        .filter((name, index, self) => self.indexOf(name) === index) // Remove duplicates
+        .slice(0, 3); // Limit to 3
 
-        console.log('Update 3: Extracted top 3:', top3);
+      console.log('Update 3: Extracted top 3:', top3);
 
-        // Extract 4-10 from second container
-        const rest = $html.find('.container.pt-4 h6.text-info')
-          .filter(function () {
-            const rank = $(this).find('span.text-white').text();
-            return parseInt(rank) >= 4 && parseInt(rank) <= 10;
-          })
-          .map(function () {
-            return $(this).text().trim().replace(/^\d+\.\s*/, '').replace(/[^\w\s]/g, '');
-          }).get();
+      // Extract 4-10 from second container
+      const rest = $html.find('.container.pt-4 h6.text-info')
+        .filter(function () {
+          const rank = $(this).find('span.text-white').text();
+          return parseInt(rank) >= 4 && parseInt(rank) <= 10;
+        })
+        .map(function () {
+          return $(this).text().trim().replace(/^\d+\.\s*/, '').replace(/[^\w\s]/g, '');
+        })
+        .get();
 
-        console.log('Update 4: Extracted 4-10:', rest);
+      console.log('Update 4: Extracted 4-10:', rest);
 
-        // Combine and limit to top 10
-        participants = [...top3, ...rest].slice(0, 10);
+      // Combine and limit to top 10
+      participants = [...top3, ...rest].slice(0, 10);
 
-        console.log('Update 5: Combined participants:', participants);
+      console.log('Update 5: Combined participants:', participants);
 
-        // Update textarea and redraw wheel
-        $textarea.val(participants.join('\n'));
-        drawWheel();
-        console.log('Update 6: Wheel updated with new participants');
-      },
-      error: function (xhr, status, error) {
-        console.error('Error fetching leaderboard:', error);
-        $textarea.val('Error loading leaderboard. Please enable CORS proxy (see console).');
-        console.log('Update 7: Fetch failed - Visit https://cors-anywhere.herokuapp.com/ and request access');
-      }
-    });
-  }
+      // Update textarea and redraw wheel
+      $textarea.val(participants.join('\n'));
+      drawWheel();
+      console.log('Update 6: Wheel updated with new participants');
+    },
+    error: function (xhr, status, error) {
+      console.error('Error fetching leaderboard:', error);
+      $textarea.val('Error loading leaderboard. Please enable CORS proxy (see console).');
+      console.log('Update 7: Fetch failed - Visit https://cors-anywhere.herokuapp.com/ and request access');
+    }
+  });
+}
 
   // Update participants and redraw wheel from textarea input
   $textarea.on('input', function () {
