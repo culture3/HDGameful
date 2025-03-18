@@ -1,205 +1,225 @@
 $(document).ready(function () {
-  const $textarea = $('.participant-list textarea');
-  const $canvas = $('.wheel-canvas');
-  const $spinButton = $('.spin-button');
-  const $winnerPopup = $('.winner-popup');
-  const $winnerName = $('#winner-name');
-  const ctx = $canvas[0].getContext('2d');
-  const spinSound = document.getElementById('spinSound');
-  let participants = [];
+  // Wheel state management for both RustMagic and Upgrader
+  const wheels = {
+    rustmagic: {
+      $textarea: $('textarea[data-wheel="rustmagic"]'),
+      $canvas: $('canvas[data-wheel="rustmagic"]'),
+      $spinButton: $('button[data-wheel="rustmagic"]'),
+      $winnerPopup: $('.winner-popup[data-wheel="rustmagic"]'),
+      $winnerName: $('#winner-name-rustmagic'),
+      ctx: $('canvas[data-wheel="rustmagic"]')[0].getContext('2d'),
+      participants: [],
+      rotation: 0,
+      isSpinning: false,
+      lastSegment: -1,
+      leaderboardUrl: 'https://www.hdgameful.com/leaderboard'
+    },
+    upgrader: {
+      $textarea: $('textarea[data-wheel="upgrader"]'),
+      $canvas: $('canvas[data-wheel="upgrader"]'),
+      $spinButton: $('button[data-wheel="upgrader"]'),
+      $winnerPopup: $('.winner-popup[data-wheel="upgrader"]'),
+      $winnerName: $('#winner-name-upgrader'),
+      ctx: $('canvas[data-wheel="upgrader"]')[0].getContext('2d'),
+      participants: [],
+      rotation: 0,
+      isSpinning: false,
+      lastSegment: -1,
+      leaderboardUrl: 'https://www.hdgameful.com/leaderboardUpgrader'
+    }
+  };
+
   const colors = ['#ff0000', '#ff8000', '#ffff00', '#00ff00', '#00ffff', '#0000ff', '#8000ff', '#ff00ff'];
-  let rotation = 0;
-  let isSpinning = false;
-  let lastSegment = -1;
+  const spinSound = document.getElementById('spinSound');
 
   // Function to draw the wheel
-  function drawWheel() {
-    ctx.clearRect(0, 0, 400, 400);
+  function drawWheel(wheel) {
+    wheel.ctx.clearRect(0, 0, 400, 400);
     const centerX = 200;
     const centerY = 200;
     const radius = 200;
 
-    if (participants.length === 0) {
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-      ctx.fill();
+    if (wheel.participants.length === 0) {
+      wheel.ctx.fillStyle = '#ffffff';
+      wheel.ctx.beginPath();
+      wheel.ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+      wheel.ctx.fill();
       return;
     }
 
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.rotate(rotation);
-    ctx.translate(-centerX, -centerY);
+    wheel.ctx.save();
+    wheel.ctx.translate(centerX, centerY);
+    wheel.ctx.rotate(wheel.rotation);
+    wheel.ctx.translate(-centerX, -centerY);
 
-    const arcSize = (2 * Math.PI) / participants.length;
-    ctx.lineWidth = 0;
-    participants.forEach((name, index) => {
+    const arcSize = (2 * Math.PI) / wheel.participants.length;
+    wheel.ctx.lineWidth = 0;
+    wheel.participants.forEach((name, index) => {
       const startAngle = index * arcSize;
       const endAngle = (index + 1) * arcSize;
 
-      ctx.beginPath();
-      ctx.moveTo(centerX, centerY);
-      ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-      ctx.fillStyle = colors[index % colors.length];
-      ctx.fill();
+      wheel.ctx.beginPath();
+      wheel.ctx.moveTo(centerX, centerY);
+      wheel.ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+      wheel.ctx.fillStyle = colors[index % colors.length];
+      wheel.ctx.fill();
 
-      ctx.save();
-      ctx.translate(centerX, centerY);
-      ctx.rotate(startAngle + arcSize / 2);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '16px "Fugaz One", sans-serif';
-      ctx.textAlign = 'right';
-      ctx.fillText(name.substring(0, 15), radius - 10, 5);
-      ctx.restore();
+      wheel.ctx.save();
+      wheel.ctx.translate(centerX, centerY);
+      wheel.ctx.rotate(startAngle + arcSize / 2);
+      wheel.ctx.fillStyle = '#ffffff';
+      wheel.ctx.font = '16px "Fugaz One", sans-serif';
+      wheel.ctx.textAlign = 'right';
+      wheel.ctx.fillText(name.substring(0, 15), radius - 10, 5);
+      wheel.ctx.restore();
     });
-    ctx.restore();
+    wheel.ctx.restore();
   }
 
-  // Function to fetch leaderboard data
-function fetchLeaderboard() {
-  console.log('Update 1: Starting leaderboard fetch');
-  const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-  const targetUrl = 'https://www.hdgameful.com/leaderboard';
+  // Function to fetch and sort leaderboard data by wager amount
+  function fetchLeaderboard(wheel) {
+    console.log(`Fetching leaderboard for ${wheel === wheels.rustmagic ? 'RustMagic' : 'Upgrader'}`);
+    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+    const targetUrl = wheel.leaderboardUrl;
 
-  // Note for you: Before opening the site, visit https://cors-anywhere.herokuapp.com/
-  // and click "Request temporary access" to enable the proxy for your session.
-  $.ajax({
-    url: proxyUrl + targetUrl,
-    method: 'GET',
-    success: function (data) {
-      console.log('Update 2: Leaderboard data fetched successfully');
-      const $html = $(data);
+    $.ajax({
+      url: proxyUrl + targetUrl,
+      method: 'GET',
+      success: function (data) {
+        const $html = $(data);
 
-      // Extract top 3 from first container, ensuring all three are captured
-      const top3Elements = $html.find('.container.mt-5 h4.text-light');
-      const top3 = top3Elements
-        .map(function () {
-          return $(this).text().trim().replace(/[\n\s]+/g, ' ');
-        })
-        .get()
-        .filter((name, index, self) => self.indexOf(name) === index) // Remove duplicates
-        .slice(0, 3); // Limit to 3
+        // Array to store participants with wager amounts
+        let leaderboardData = [];
 
-      console.log('Update 3: Extracted top 3:', top3);
+        // Extract top 3 from first container
+        $html.find('.container.mt-5 h4.text-light').each(function () {
+          const name = $(this).text().trim().replace(/[\n\s]+/g, ' ');
+          const wagerText = $(this).siblings('h6').find('span.text-info').text().trim();
+          const wager = parseFloat(wagerText.replace(/,/g, '')) || 0;
+          leaderboardData.push({ name, wager });
+        });
 
-      // Extract 4-10 from second container
-      const rest = $html.find('.container.pt-4 h6.text-info')
-        .filter(function () {
-          const rank = $(this).find('span.text-white').text();
-          return parseInt(rank) >= 4 && parseInt(rank) <= 10;
-        })
-        .map(function () {
-          return $(this).text().trim().replace(/^\d+\.\s*/, '').replace(/[^\w\s]/g, '');
-        })
-        .get();
+        // Extract 4-10 from table
+        $html.find('.table tbody tr').each(function () {
+          const rank = parseInt($(this).find('th').text());
+          if (rank >= 4 && rank <= 10) {
+            const name = $(this).find('td.text-light').first().text().trim();
+            const wagerText = $(this).find('td.text-end').text().trim().split(' ')[0];
+            const wager = parseFloat(wagerText.replace(/,/g, '')) || 0;
+            leaderboardData.push({ name, wager });
+          }
+        });
 
-      console.log('Update 4: Extracted 4-10:', rest);
+        // Sort by wager amount (highest to lowest) and filter duplicates
+        leaderboardData.sort((a, b) => b.wager - a.wager);
+        const uniqueNames = [...new Set(leaderboardData.map(item => item.name))]; // Remove duplicates
+        wheel.participants = uniqueNames.slice(0, 10); // Limit to top 10
 
-      // Combine and limit to top 10
-      participants = [...top3, ...rest].slice(0, 10);
-
-      console.log('Update 5: Combined participants:', participants);
-
-      // Update textarea and redraw wheel
-      $textarea.val(participants.join('\n'));
-      drawWheel();
-      console.log('Update 6: Wheel updated with new participants');
-    },
-    error: function (xhr, status, error) {
-      console.error('Error fetching leaderboard:', error);
-      $textarea.val('Error loading leaderboard. Please enable CORS proxy (see console).');
-      console.log('Update 7: Fetch failed - Visit https://cors-anywhere.herokuapp.com/ and request access');
-    }
-  });
-}
+        // Update textarea and redraw wheel
+        wheel.$textarea.val(wheel.participants.join('\n'));
+        drawWheel(wheel);
+      },
+      error: function (xhr, status, error) {
+        console.error(`Error fetching leaderboard for ${wheel === wheels.rustmagic ? 'RustMagic' : 'Upgrader'}:`, error);
+        wheel.$textarea.val('Error loading leaderboard. Please enable CORS proxy (see console).');
+        drawWheel(wheel);
+      }
+    });
+  }
 
   // Update participants and redraw wheel from textarea input
-  $textarea.on('input', function () {
-    participants = $(this).val().split('\n').filter(name => name.trim() !== '');
-    drawWheel();
-  });
+  function setupTextarea(wheel) {
+    wheel.$textarea.on('input', function () {
+      wheel.participants = $(this).val().split('\n').filter(name => name.trim() !== '');
+      drawWheel(wheel);
+    });
+  }
 
-  $spinButton.on('click', function () {
-    if (participants.length === 0) {
-      alert('Please add at least one participant!');
-      return;
-    }
-    if (isSpinning) return;
+  // Spin functionality
+  function setupSpin(wheel) {
+    wheel.$spinButton.on('click', function () {
+      if (wheel.participants.length === 0) {
+        alert('Please add at least one participant!');
+        return;
+      }
+      if (wheel.isSpinning) return;
 
-    isSpinning = true;
-    $spinButton.prop('disabled', true);
+      wheel.isSpinning = true;
+      wheel.$spinButton.prop('disabled', true);
 
-    const winnerIndex = Math.floor(Math.random() * participants.length);
-    const segmentAngle = (2 * Math.PI) / participants.length;
-    const extraSpins = 5 + Math.random() * 7;
-    const baseTarget = extraSpins * 2 * Math.PI - segmentAngle * (winnerIndex + 0.5);
-    const suspenseOffset = (Math.random() - 0.5) * segmentAngle * 0.4;
-    const targetRotation = baseTarget + suspenseOffset;
-    const duration = 5000;
-    let startTime = null;
-    let initialRotation = rotation;
+      const winnerIndex = Math.floor(Math.random() * wheel.participants.length);
+      const segmentAngle = (2 * Math.PI) / wheel.participants.length;
+      const extraSpins = 5 + Math.random() * 7;
+      const baseTarget = extraSpins * 2 * Math.PI - segmentAngle * (winnerIndex + 0.5);
+      const suspenseOffset = (Math.random() - 0.5) * segmentAngle * 0.4;
+      const targetRotation = baseTarget + suspenseOffset;
+      const duration = 5000;
+      let startTime = null;
+      let initialRotation = wheel.rotation;
 
-    function easeOutCubic(t) {
-      return 1 - Math.pow(1 - t, 3);
-    }
-
-    function animateSpin(timestamp) {
-      if (!startTime) startTime = timestamp;
-      const elapsed = timestamp - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-
-      const easedProgress = easeOutCubic(progress);
-      rotation = initialRotation + (targetRotation - initialRotation) * easedProgress;
-
-      const currentAngle = (-rotation + 2 * Math.PI) % (2 * Math.PI);
-      const currentSegment = Math.floor(currentAngle / segmentAngle);
-      if (currentSegment !== lastSegment && progress < 1) {
-        spinSound.currentTime = 0;
-        spinSound.play();
-        lastSegment = currentSegment;
+      function easeOutCubic(t) {
+        return 1 - Math.pow(1 - t, 3);
       }
 
-      drawWheel();
+      function animateSpin(timestamp) {
+        if (!startTime) startTime = timestamp;
+        const elapsed = timestamp - startTime;
+        const progress = Math.min(elapsed / duration, 1);
 
-      if (progress < 1) {
-        requestAnimationFrame(animateSpin);
-      } else {
-        rotation = targetRotation % (2 * Math.PI);
-        drawWheel();
+        const easedProgress = easeOutCubic(progress);
+        wheel.rotation = initialRotation + (targetRotation - initialRotation) * easedProgress;
 
-        const pointer_angle_in_original_wheel = (-rotation + 2 * Math.PI) % (2 * Math.PI);
-        const winnerIndexFinal = Math.floor(pointer_angle_in_original_wheel / segmentAngle);
-        const winner = participants[winnerIndexFinal];
+        const currentAngle = (-wheel.rotation + 2 * Math.PI) % (2 * Math.PI);
+        const currentSegment = Math.floor(currentAngle / segmentAngle);
+        if (currentSegment !== wheel.lastSegment && progress < 1) {
+          spinSound.currentTime = 0;
+          spinSound.play();
+          wheel.lastSegment = currentSegment;
+        }
 
-        $winnerName.text(winner);
-        $winnerPopup.fadeIn(300);
-        triggerConfetti();
+        drawWheel(wheel);
 
-        isSpinning = false;
-        $spinButton.prop('disabled', false);
-        lastSegment = -1;
+        if (progress < 1) {
+          requestAnimationFrame(animateSpin);
+        } else {
+          wheel.rotation = targetRotation % (2 * Math.PI);
+          drawWheel(wheel);
+
+          const pointerAngle = (-wheel.rotation + 2 * Math.PI) % (2 * Math.PI);
+          const winnerIndexFinal = Math.floor(pointerAngle / segmentAngle);
+          const winner = wheel.participants[winnerIndexFinal];
+
+          wheel.$winnerName.text(winner);
+          wheel.$winnerPopup.fadeIn(300);
+          triggerConfetti();
+
+          wheel.isSpinning = false;
+          wheel.$spinButton.prop('disabled', false);
+          wheel.lastSegment = -1;
+        }
       }
-    }
 
-    requestAnimationFrame(animateSpin);
-  });
+      requestAnimationFrame(animateSpin);
+    });
+  }
 
   // Popup button handlers
-  $('.close-btn').on('click', function () {
-    $winnerPopup.fadeOut(300);
-  });
+  function setupPopup(wheel) {
+    wheel.$winnerPopup.find('.close-btn').on('click', function () {
+      wheel.$winnerPopup.fadeOut(300);
+    });
 
-  $('.remove-btn').on('click', function () {
-    const winner = $winnerName.text();
-    const indexToRemove = participants.indexOf(winner);
-    if (indexToRemove !== -1) {
-      participants.splice(indexToRemove, 1);
-      $textarea.val(participants.join('\n'));
-      $winnerPopup.fadeOut(300);
-      drawWheel();
-    }
-  });
+    wheel.$winnerPopup.find('.remove-btn').on('click', function () {
+      const winner = wheel.$winnerName.text();
+      const indexToRemove = wheel.participants.indexOf(winner);
+      if (indexToRemove !== -1) {
+        wheel.participants.splice(indexToRemove, 1);
+        wheel.$textarea.val(wheel.participants.join('\n'));
+        wheel.$winnerPopup.fadeOut(300);
+        drawWheel(wheel);
+      }
+    });
+  }
 
   // Confetti effect
   function triggerConfetti() {
@@ -211,6 +231,20 @@ function fetchLeaderboard() {
     });
   }
 
-  // Fetch leaderboard on every page load
-  fetchLeaderboard();
+  // Tab switching
+  $('.tab-item').on('click', function () {
+    $('.tab-item').removeClass('active');
+    $(this).addClass('active');
+
+    $('.wheel-tab-content').hide();
+    $(`#${$(this).data('tab')}`).show();
+  });
+
+  // Initialize both wheels
+  Object.values(wheels).forEach(wheel => {
+    setupTextarea(wheel);
+    setupSpin(wheel);
+    setupPopup(wheel);
+    fetchLeaderboard(wheel);
+  });
 });
