@@ -435,3 +435,31 @@ body {
 .content a:hover {
   text-decoration: underline;
 }
+
+/* Tab Menu Styles */
+.tab-menu {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tab-item {
+  background-color: #333;
+  color: #ffffff;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1.1em;
+  font-family: 'Fugaz One', sans-serif;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.tab-item:hover {
+  background-color: #fe1d69;
+}
+
+.tab-item.active {
+  background-color: #fe1d69;
+}
