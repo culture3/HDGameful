@@ -27,14 +27,36 @@
     </h2>
   </div>
 
-  <div class="wheel-container">
-    <div class="wheel">
-      <div class="pointer"></div>
-      <canvas class="wheel-canvas" width="400" height="400"></canvas>
-      <button class="spin-button">Spin</button>
+  <!-- Tab Navigation -->
+  <div class="tab-menu">
+    <button class="tab-item active" data-tab="rustmagic">RustMagic</button>
+    <button class="tab-item" data-tab="upgrader">Upgrader</button>
+  </div>
+
+  <!-- Wheel Containers -->
+  <div class="wheel-tab-content" id="rustmagic" style="display: block;">
+    <div class="wheel-container">
+      <div class="wheel">
+        <div class="pointer"></div>
+        <canvas class="wheel-canvas" width="400" height="400" data-wheel="rustmagic"></canvas>
+        <button class="spin-button" data-wheel="rustmagic">Spin</button>
+      </div>
+      <div class="participant-list">
+        <textarea placeholder="Enter participants, one per line..." data-wheel="rustmagic"></textarea>
+      </div>
     </div>
-    <div class="participant-list">
-      <textarea placeholder="Enter participants, one per line..."></textarea>
+  </div>
+
+  <div class="wheel-tab-content" id="upgrader" style="display: none;">
+    <div class="wheel-container">
+      <div class="wheel">
+        <div class="pointer"></div>
+        <canvas class="wheel-canvas" width="400" height="400" data-wheel="upgrader"></canvas>
+        <button class="spin-button" data-wheel="upgrader">Spin</button>
+      </div>
+      <div class="participant-list">
+        <textarea placeholder="Enter participants, one per line..." data-wheel="upgrader"></textarea>
+      </div>
     </div>
   </div>
 
@@ -42,9 +64,16 @@
     Made by Amyntus. Good luck!
   </div>
 
-  <div class="winner-popup">
+  <div class="winner-popup" data-wheel="rustmagic">
     <h2>Winner!</h2>
-    <p id="winner-name"></p>
+    <p id="winner-name-rustmagic"></p>
+    <button class="close-btn">Close</button>
+    <button class="remove-btn">Remove</button>
+  </div>
+
+  <div class="winner-popup" data-wheel="upgrader">
+    <h2>Winner!</h2>
+    <p id="winner-name-upgrader"></p>
     <button class="close-btn">Close</button>
     <button class="remove-btn">Remove</button>
   </div>
