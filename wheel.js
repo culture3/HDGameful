@@ -12,7 +12,7 @@ $(document).ready(function () {
       rotation: 0,
       isSpinning: false,
       lastSegment: -1,
-      leaderboardUrl: 'https://staticstony.great-site.net/fetch_leaderboard.php?type=rustmagic'
+      leaderboardUrl: 'https://www.hdgameful.com/leaderboard'
     },
     upgrader: {
       $textarea: $('textarea[data-wheel="upgrader"]'),
@@ -25,7 +25,7 @@ $(document).ready(function () {
       rotation: 0,
       isSpinning: false,
       lastSegment: -1,
-      leaderboardUrl: 'https://staticstony.great-site.net/fetch_leaderboard.php?type=upgrader'
+      leaderboardUrl: 'https://www.hdgameful.com/leaderboardUpgrader'
     }
   };
 
@@ -76,25 +76,44 @@ $(document).ready(function () {
     wheel.ctx.restore();
   }
 
-  // Function to fetch participants from the PHP script
+  // Function to fetch and sort leaderboard data by wager amount
   function fetchLeaderboard(wheel) {
     console.log(`Fetching leaderboard for ${wheel === wheels.rustmagic ? 'RustMagic' : 'Upgrader'}`);
+    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
     const targetUrl = wheel.leaderboardUrl;
 
     $.ajax({
-      url: targetUrl,
+      url: proxyUrl + targetUrl,
       method: 'GET',
-      dataType: 'json', // Expect JSON response
       success: function (data) {
-        // Extract participants from JSON and clean up names
-        let participants = data.participants || [];
-        participants = participants.map(name => 
-          name.replace(/["\\u00a0]/g, '').trim() // Remove quotes, non-breaking spaces, and trim
-        ).filter(name => name !== ''); // Remove empty entries
+        const $html = $(data);
 
-        // Limit to top 10 and remove duplicates
-        const uniqueNames = [...new Set(participants)].slice(0, 10);
-        wheel.participants = uniqueNames;
+        // Array to store participants with wager amounts
+        let leaderboardData = [];
+
+        // Extract top 3 from first container
+        $html.find('.container.mt-5 h4.text-light').each(function () {
+          const name = $(this).text().trim().replace(/[\n\s]+/g, ' ');
+          const wagerText = $(this).siblings('h6').find('span.text-info').text().trim();
+          const wager = parseFloat(wagerText.replace(/,/g, '')) || 0;
+          leaderboardData.push({ name, wager });
+        });
+
+        // Extract 4-10 from table
+        $html.find('.table tbody tr').each(function () {
+          const rank = parseInt($(this).find('th').text());
+          if (rank >= 4 && rank <= 10) {
+            const name = $(this).find('td.text-light').first().text().trim();
+            const wagerText = $(this).find('td.text-end').text().trim().split(' ')[0];
+            const wager = parseFloat(wagerText.replace(/,/g, '')) || 0;
+            leaderboardData.push({ name, wager });
+          }
+        });
+
+        // Sort by wager amount (highest to lowest) and filter duplicates
+        leaderboardData.sort((a, b) => b.wager - a.wager);
+        const uniqueNames = [...new Set(leaderboardData.map(item => item.name))]; // Remove duplicates
+        wheel.participants = uniqueNames.slice(0, 10); // Limit to top 10
 
         // Update textarea and redraw wheel
         wheel.$textarea.val(wheel.participants.join('\n'));
@@ -102,7 +121,7 @@ $(document).ready(function () {
       },
       error: function (xhr, status, error) {
         console.error(`Error fetching leaderboard for ${wheel === wheels.rustmagic ? 'RustMagic' : 'Upgrader'}:`, error);
-        wheel.$textarea.val('Error loading participants. Check console for details.');
+        wheel.$textarea.val('Error loading leaderboard. Please enable CORS proxy (see console).');
         drawWheel(wheel);
       }
     });
