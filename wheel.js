@@ -12,7 +12,7 @@ $(document).ready(function () {
       rotation: 0,
       isSpinning: false,
       lastSegment: -1,
-      leaderboardUrl: 'https://staticstony.great-site.net/fetch_leaderboard.php?type=rustmagic'
+      leaderboardUrl: 'https://www.hdgameful.com/leaderboard'
     },
     upgrader: {
       $textarea: $('textarea[data-wheel="upgrader"]'),
@@ -25,7 +25,7 @@ $(document).ready(function () {
       rotation: 0,
       isSpinning: false,
       lastSegment: -1,
-      leaderboardUrl: 'https://staticstony.great-site.net/fetch_leaderboard.php?type=upgrader'
+      leaderboardUrl: 'https://www.hdgameful.com/leaderboardUpgrader'
     }
   };
 
@@ -76,55 +76,60 @@ $(document).ready(function () {
     wheel.ctx.restore();
   }
 
-  // Function to decode Unicode escape sequences
-  function decodeUnicode(str) {
-    return str.replace(/\\u([\dA-F]{4})/gi, (match, grp) => {
-      return String.fromCharCode(parseInt(grp, 16));
-    });
-  }
-
-  // Function to clean participant names
-  function cleanName(name) {
-    // Decode Unicode, replace non-breaking spaces with regular spaces, and trim
-    return decodeUnicode(name)
-      .replace(/\u00A0/g, ' ') // Replace non-breaking spaces
-      .replace(/\s+/g, ' ')    // Collapse multiple spaces
-      .trim();                 // Remove leading/trailing spaces
-  }
-
-  // Function to fetch leaderboard data from PHP proxy and populate textarea
+  // Function to fetch and sort leaderboard data by wager amount
   function fetchLeaderboard(wheel) {
     console.log(`Fetching leaderboard for ${wheel === wheels.rustmagic ? 'RustMagic' : 'Upgrader'}`);
-    $.ajax({
-      url: wheel.leaderboardUrl,
-      method: 'GET',
-      dataType: 'json',
-      success: function (data) {
-        if (data.error) {
-          console.error('Error from PHP proxy:', data.error);
-          wheel.$textarea.val('Error loading leaderboard. Check console.');
-          drawWheel(wheel);
-          return;
-        }
+    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+    const targetUrl = wheel.leaderboardUrl;
 
-        // Clean participant names and ensure plain-text list format
-        wheel.participants = (data.participants || []).map(cleanName);
-        // Populate textarea with one participant per line, no JSON formatting
+    $.ajax({
+      url: proxyUrl + targetUrl,
+      method: 'GET',
+      success: function (data) {
+        const $html = $(data);
+
+        // Array to store participants with wager amounts
+        let leaderboardData = [];
+
+        // Extract top 3 from first container
+        $html.find('.container.mt-5 h4.text-light').each(function () {
+          const name = $(this).text().trim().replace(/[\n\s]+/g, ' ');
+          const wagerText = $(this).siblings('h6').find('span.text-info').text().trim();
+          const wager = parseFloat(wagerText.replace(/,/g, '')) || 0;
+          leaderboardData.push({ name, wager });
+        });
+
+        // Extract 4-10 from table
+        $html.find('.table tbody tr').each(function () {
+          const rank = parseInt($(this).find('th').text());
+          if (rank >= 4 && rank <= 10) {
+            const name = $(this).find('td.text-light').first().text().trim();
+            const wagerText = $(this).find('td.text-end').text().trim().split(' ')[0];
+            const wager = parseFloat(wagerText.replace(/,/g, '')) || 0;
+            leaderboardData.push({ name, wager });
+          }
+        });
+
+        // Sort by wager amount (highest to lowest) and filter duplicates
+        leaderboardData.sort((a, b) => b.wager - a.wager);
+        const uniqueNames = [...new Set(leaderboardData.map(item => item.name))]; // Remove duplicates
+        wheel.participants = uniqueNames.slice(0, 10); // Limit to top 10
+
+        // Update textarea and redraw wheel
         wheel.$textarea.val(wheel.participants.join('\n'));
         drawWheel(wheel);
       },
       error: function (xhr, status, error) {
         console.error(`Error fetching leaderboard for ${wheel === wheels.rustmagic ? 'RustMagic' : 'Upgrader'}:`, error);
-        wheel.$textarea.val('Error loading leaderboard. Check console.');
+        wheel.$textarea.val('Error loading leaderboard. Please enable CORS proxy (see console).');
         drawWheel(wheel);
       }
     });
   }
 
-  // Update participants and redraw wheel from textarea input (for streamer edits)
+  // Update participants and redraw wheel from textarea input
   function setupTextarea(wheel) {
     wheel.$textarea.on('input', function () {
-      // Split textarea content by newlines, filter out empty lines
       wheel.participants = $(this).val().split('\n').filter(name => name.trim() !== '');
       drawWheel(wheel);
     });
