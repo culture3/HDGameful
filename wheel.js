@@ -76,7 +76,23 @@ $(document).ready(function () {
     wheel.ctx.restore();
   }
 
-  // Function to fetch leaderboard data from PHP proxy
+  // Function to decode Unicode escape sequences
+  function decodeUnicode(str) {
+    return str.replace(/\\u([\dA-F]{4})/gi, (match, grp) => {
+      return String.fromCharCode(parseInt(grp, 16));
+    });
+  }
+
+  // Function to clean participant names
+  function cleanName(name) {
+    // Decode Unicode, replace non-breaking spaces with regular spaces, and trim
+    return decodeUnicode(name)
+      .replace(/\u00A0/g, ' ') // Replace non-breaking spaces
+      .replace(/\s+/g, ' ')    // Collapse multiple spaces
+      .trim();                 // Remove leading/trailing spaces
+  }
+
+  // Function to fetch leaderboard data from PHP proxy and populate textarea
   function fetchLeaderboard(wheel) {
     console.log(`Fetching leaderboard for ${wheel === wheels.rustmagic ? 'RustMagic' : 'Upgrader'}`);
     $.ajax({
@@ -91,7 +107,9 @@ $(document).ready(function () {
           return;
         }
 
-        wheel.participants = data.participants || [];
+        // Clean participant names and ensure plain-text list format
+        wheel.participants = (data.participants || []).map(cleanName);
+        // Populate textarea with one participant per line, no JSON formatting
         wheel.$textarea.val(wheel.participants.join('\n'));
         drawWheel(wheel);
       },
@@ -103,9 +121,10 @@ $(document).ready(function () {
     });
   }
 
-  // Update participants and redraw wheel from textarea input
+  // Update participants and redraw wheel from textarea input (for streamer edits)
   function setupTextarea(wheel) {
     wheel.$textarea.on('input', function () {
+      // Split textarea content by newlines, filter out empty lines
       wheel.participants = $(this).val().split('\n').filter(name => name.trim() !== '');
       drawWheel(wheel);
     });
