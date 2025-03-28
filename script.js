@@ -1,14 +1,18 @@
 $(document).ready(function () {
   const items = [
-    { name: "5 Coins RustMagic", probability: 30, image: "item.png" },
-    { name: "$5 Upgrader", probability: 20, image: "item2.png" },
-    { name: "10 Coins RustMagic", probability: 25, image: "item3.png" },
-    { name: "$10 Upgrader", probability: 15, image: "item4.png" },
-    { name: "15 Coins RustMagic", probability: 2.5, image: "item5.png" },
-    { name: "RustMagic Free Battle", probability: 2.5, image: "item6.png" },
-    { name: "$15 Upgrader", probability: 2.25, image: "item7.png" },
-    { name: "Upgrader Free Battle", probability: 2.25, image: "item8.png" },
     { name: "REROLL ALL WINS X2", probability: 0.5, image: "item9.gif" },
+    { name: "$15 Upgrader", probability: 1.25, image: "item7.png" },
+    { name: "Upgrader Free Battle", probability: 1.25, image: "item8.png" },
+    { name: "15 Coins RustMagic", probability: 1.75, image: "item5.png" },
+    { name: "RustMagic Free Battle", probability: 1.75, image: "item6.png" },
+    { name: "15 Coins CSGOGem", probability: 1.75, image: "item12.png" },
+    { name: "CSGOGem Free Battle", probability: 1.75, image: "item13.png" },
+    { name: "$10 Upgrader", probability: 12, image: "item4.png" },
+    { name: "$5 Upgrader", probability: 14, image: "item2.png" },
+    { name: "10 Coins RustMagic", probability: 15, image: "item3.png" },
+    { name: "10 Coins CSGOGem", probability: 15, image: "item11.png" },
+    { name: "5 Coins RustMagic", probability: 17, image: "item.png" },
+    { name: "5 Coins CSGOGem", probability: 17, image: "item10.png" },
   ];
 
   function getShortName(fullName) {
@@ -47,6 +51,7 @@ $(document).ready(function () {
     const itemListContainer = $('.item-list-items');
     itemListContainer.empty();
 
+    // Sort items by probability (lowest to highest) for display
     const sortedItemsForDisplay = [...items].sort((a, b) => a.probability - b.probability);
 
     sortedItemsForDisplay.forEach(item => {
@@ -236,25 +241,25 @@ $(document).ready(function () {
     return lastCenteredItemIndex;
   }
 
-function triggerConfetti(winningElement) {
-  const itemPosition = winningElement.offset();
-  const itemWidth = winningElement.width();
-  const itemHeight = winningElement.height();
-  const originX = (itemPosition.left + itemWidth / 2) / window.innerWidth;
-  const originY = Math.max(0, (itemPosition.top - -75)) / window.innerHeight;
+  function triggerConfetti(winningElement) {
+    const itemPosition = winningElement.offset();
+    const itemWidth = winningElement.width();
+    const itemHeight = winningElement.height();
+    const originX = (itemPosition.left + itemWidth / 2) / window.innerWidth;
+    const originY = Math.max(0, (itemPosition.top - -75)) / window.innerHeight;
 
-  confetti({
-    particleCount: 100,
-    spread: 300,
-    origin: { x: originX, y: originY },
-    colors: ['#fe1d69', '#ff0000', '#00ff00', '#0000ff', '#ffff00'],
-    shapes: ['square', 'circle'],
-    gravity: 0.2,
-    scalar: 1.2,
-    startVelocity: 40,
-    disableForReducedMotion: true,
-  });
-}
+    confetti({
+      particleCount: 100,
+      spread: 300,
+      origin: { x: originX, y: originY },
+      colors: ['#fe1d69', '#ff0000', '#00ff00', '#0000ff', '#ffff00'],
+      shapes: ['square', 'circle'],
+      gravity: 0.2,
+      scalar: 1.2,
+      startVelocity: 40,
+      disableForReducedMotion: true,
+    });
+  }
 
   function playWinSound() {
     if (winSound) {

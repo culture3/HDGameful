@@ -276,9 +276,9 @@ body {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  width: 1000px;
-  gap: 20px;
-  max-width: 1000px;
+  width: 1200px; /* Increased from 1000px to accommodate 7 items comfortably */
+  gap: 30px 20px; /* Keeping horizontal gap 30px, vertical gap 20px */
+  max-width: 1200px;
   margin-top: 10px;
 }
 
@@ -286,18 +286,19 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 18%;
-  margin-bottom: 20px;
+  width: calc((1200px - (30px * 6)) / 7); /* 7 items in first row: ~154.29px each */
+  margin-bottom: 0; /* Gap handles vertical spacing */
   transition: transform 0.05s linear, box-shadow 0.05s linear;
+}
+
+/* Second row with 6 items */
+.item-list-items > .item-list-item:nth-child(n+8) {
+  width: calc((1200px - (30px * 5)) / 6); /* 6 items in second row: ~175px each */
 }
 
 .item-list-item:hover {
   transform: scale(1.1);
   z-index: 1;
-}
-
-.item-list-items > .item-list-item:nth-child(n+6) {
-  width: 23%;
 }
 
 .item-image {
@@ -315,7 +316,9 @@ body {
   color: #ffffff;
   font-size: 0.7em;
   background: rgba(128, 128, 128, 0.7);
-  padding: 3px 7px;
+  padding: 3px 0; /* Removed horizontal padding for fixed width */
+  width: 40px; /* Fixed width for consistency */
+  text-align: center; /* Center the text within the fixed width */
   border-radius: 3px;
 }
 
@@ -324,6 +327,7 @@ body {
   font-size: 0.9em;
   margin-top: 5px;
   font-family: 'Fugaz One', sans-serif;
+  white-space: nowrap; /* Prevents text from wrapping to a new line */
 }
 
 .open-button {
