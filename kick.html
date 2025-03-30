@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HDGameful - Kick Giveaway</title>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="wheel.css" />
   <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
   <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -23,18 +24,40 @@
     <h1 class="title">Kick Giveaway</h1>
     <h2 class="subtitle">
       <img src="lightning.gif" alt="Lightning" class="gif-left" />
-      USE CODE HDG
+      TYPE THE KEYWORD IN CHAT
       <img src="lightning.gif" alt="Lightning" class="gif-right" />
     </h2>
   </div>
 
-  <div class="content">
-    <p>COMING SOON</p>
+  <div class="content" style="position: relative;">
+    <div class="keyword-section">
+      <input type="text" id="keyword-input" placeholder="Enter giveaway keyword" />
+      <button id="clear-giveaway">Clear</button>
+    </div>
+    <div class="case-container">
+      <div class="spin-container"></div>
+    </div>
+    <div class="winner-chat-container">
+      <p>Winner Chat: <span id="winner-name">None</span></p>
+      <div class="winner-messages" id="winner-messages"></div>
+    </div>
+    <div class="open-button">
+      <button id="spin-wheel">Spin</button>
+    </div>
+    <div class="participant-info">
+      <p>Participants: <span id="participant-count">0</span></p>
+      <div class="participant-list">
+        <ul id="participant-names"></ul>
+      </div>
+    </div>
   </div>
 
   <div class="watermark-footer">
     Made by Amyntus. Good luck!
   </div>
+
+  <audio id="tickSound" src="tick.mp3" preload="auto"></audio>
+  <audio id="winSound" src="win.mp3" preload="auto"></audio>
 
   <script src="kick.js"></script>
 </body>
